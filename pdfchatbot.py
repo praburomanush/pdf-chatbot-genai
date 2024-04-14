@@ -15,7 +15,7 @@ from langchain_community.llms import HuggingFaceHub, HuggingFacePipeline
 
 # load environment variables
 load_dotenv()
-openai_api_key = "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"
+
 
 
 def get_pdf_text(pdf_file):
@@ -38,10 +38,10 @@ def get_text_chunks(text, chunk_size=1000, chunk_overlap=200):
 
 
 # get vector store method
-def get_vectorstore(text_chunks):
+def get_vectorstore(text_chunks,openai_api_key):
 
     embeddings = OpenAIEmbeddings(
-        openai_api_key="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"
+        openai_api_key=openai_api_key
     )
     # embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
     vector_store = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
@@ -52,10 +52,10 @@ def get_vectorstore(text_chunks):
 
 
 # get conversation chain method
-def get_conversation_chain(vectorstore):
+def get_conversation_chain(vectorstore,openai_api_key):
     model_prams = {"temperature": 0.23, "max_length": 4096}
     llm = ChatOpenAI(
-        openai_api_key="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"
+        openai_api_key=openai_api_key
     )
 
     # Alternatively, you can use a different language model, like Hugging Face's model
@@ -115,13 +115,17 @@ def main():
         pdf_docs = st.file_uploader(
             "Upload PDFs and click process", type="pdf", accept_multiple_files=True
         )
+        openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
 
         if st.button("Process"):
+            if not openai_api_key:
+                st.info("Please add your OpenAI API key to continue.")
+                st.stop()
             with st.spinner("Processing PDFs"):
-                process_files(pdf_docs, st)
+                process_files(pdf_docs, st,openai_api_key)
 
 
-def process_files(file_list, st):
+def process_files(file_list, st,openai_api_key):
 
     for file in file_list:
         file_extension = os.path.splitext(file.name)[1]
@@ -143,10 +147,10 @@ def process_files(file_list, st):
     text_chunks = get_text_chunks(raw_text)
     print(f"Number of text chunks: {len(text_chunks)}")
     print("Creating vector store")
-    vector_store = get_vectorstore(text_chunks)
+    vector_store = get_vectorstore(text_chunks,openai_api_key)
     print("Vector store created")
     print("Creating conversation chain")
-    st.session_state.conversation = get_conversation_chain(vector_store)
+    st.session_state.conversation = get_conversation_chain(vector_store,openai_api_key)
     print("Conversation chain created")
 
 
