@@ -15,7 +15,7 @@ from langchain_community.llms import HuggingFaceHub, HuggingFacePipeline
 
 # load environment variables
 load_dotenv()
-openai_api_key = "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"
+openai_api_key = "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"
 
 
 def get_pdf_text(pdf_file):
